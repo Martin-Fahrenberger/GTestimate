@@ -13,3 +13,5 @@ Imports:
     Rcpp
 LinkingTo:
     Rcpp
+URL: https://github.com/Martin-Fahrenberger/GTestimate
+BugReports: https://github.com/Martin-Fahrenberger/GTestimate/issues
