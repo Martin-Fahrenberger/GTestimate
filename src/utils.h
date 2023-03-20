@@ -1,4 +1,3 @@
-#include <Rconfig.h>
 #include "Rcpp.h"
 
 /* Defining all R-accessible functions. */

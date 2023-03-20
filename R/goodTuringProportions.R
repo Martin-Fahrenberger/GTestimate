@@ -1,4 +1,5 @@
 #' Good Turing Proportions
+#'
 #' Calculatest the Good Truing proportions for a matrix of expression values
 #'
 #' @param counts
@@ -13,7 +14,7 @@ goodTuringProportions <- function(counts)
   #	Gordon Smyth
   #	15 Dec 2010.  Last modified 5 Jan 2011.
 {
-  z <- counts <- as.matrix(counts)
+  z <- counts
   nlibs <- ncol(counts)
   for (i in 1:nlibs) {
     g <- goodTuring(counts[,i])

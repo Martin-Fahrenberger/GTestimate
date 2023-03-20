@@ -1,4 +1,5 @@
 #' goodTuring
+#'
 #'	Simple Good-Turing algorithm for frequency estimation
 #'	as described by Gale and Sampson (1995)
 #'  Sampson's C code translated to C++ and optimized by Aaron Lun
@@ -17,7 +18,7 @@
 #' n0: the number of 0zeroes in the input
 #' @export
 #' @examples
-#' test_vec <- c(1,1,2,2,5,2,6,3,4,2,6,7,3,3,4,6,3,2,4,5,3)
+#' test_vec <- c(1,1,2,2,0,0,5,2,0,6,3,0,4,2,1,6,0,7,3,3,4,6,1,3,2,4,5,3,0,0,1)
 #' goodTuring(test_vec)
 
 goodTuring <- function(x, conf=1.96)

@@ -2,8 +2,7 @@
 % Please edit documentation in R/goodTuringProportions.R
 \name{goodTuringProportions}
 \alias{goodTuringProportions}
-\title{Good Turing Proportions
-Calculatest the Good Truing proportions for a matrix of expression values}
+\title{Good Turing Proportions}
 \usage{
 goodTuringProportions(counts)
 }
@@ -14,7 +13,6 @@ goodTuringProportions(counts)
 matrix of GT proportions
 }
 \description{
-Good Turing Proportions
 Calculatest the Good Truing proportions for a matrix of expression values
 }
 \examples{
