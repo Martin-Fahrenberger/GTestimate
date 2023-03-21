@@ -16,42 +16,29 @@
 #' count: the count levels
 #' n: the number of occurences for each count level
 #' n0: the number of 0zeroes in the input
+#' @importFrom rlang abort
 #' @export
 #' @examples
 #' test_vec <- c(1,1,2,2,0,0,5,2,0,6,3,0,4,2,1,6,0,7,3,3,4,6,1,3,2,4,5,3,0,0,1)
 #' goodTuring(test_vec)
 
-goodTuring <- function(x, conf=1.96)
+goodTuring <- function(freq_table, conf=1.96)
 {
-#	Raw frequencies
-	x <- as.integer(x)
-	if(max(x) < length(x)) {
-		n <- tabulate(x+1L)
-		n0 <- n[1]
-		n <- n[-1]
-		max.x <- length(n)
-		r <- seq.int(from=1L,to=max.x)
-		r <- r[n>0]
-		n <- n[n>0]
-	} else {
-		r <- sort(unique(x))
-		z <- match(x,r)
-		n <- tabulate(z)
-		if(r[1]==0) {
-			n0 <- n[1]
-			n <- n[-1]
-			r <- r[-1]
-		} else {
-			n0 <- 0
-		}
-	}
+  if(!class(freq_table) == 'table') abort(message('freq_table has to be an object of class "table"'))
+  freq_table <- freq_table[freq_table != 0]
+  if (is.na(freq_table['0'])){
+    n0 <- 0
+    n <- as.numeric(freq_table)
+    r <- as.numeric(names(freq_table))
+  } else{
+    n0 <- freq_table['0']
+    n <- as.numeric(freq_table[-1])
+    r <- as.numeric(names(freq_table[-1]))
+  }
 
 #	SGT algorithm (no type checking, as that's enforced above)
 	out <- .Call('simple_good_turing', PACKAGE = 'GTestimate', r, n, conf)
 	names(out) <- c("P0","proportion")
-
-	out$count <- r
-	out$n <- n
-	out$n0 <- n0
-	out
+	names(out$proportion) <- r
+	out$proportion
 }
