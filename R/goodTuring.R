@@ -22,23 +22,12 @@
 #' test_vec <- c(1,1,2,2,0,0,5,2,0,6,3,0,4,2,1,6,0,7,3,3,4,6,1,3,2,4,5,3,0,0,1)
 #' goodTuring(test_vec)
 
-goodTuring <- function(freq_table, conf=1.96)
+goodTuring <- function(n, r, conf=1.96)
 {
-  if(!class(freq_table) == 'table') abort(message('freq_table has to be an object of class "table"'))
-  freq_table <- freq_table[freq_table != 0]
-  if (is.na(freq_table['0'])){
-    n0 <- 0
-    n <- as.numeric(freq_table)
-    r <- as.numeric(names(freq_table))
-  } else{
-    n0 <- freq_table['0']
-    n <- as.numeric(freq_table[-1])
-    r <- as.numeric(names(freq_table[-1]))
-  }
+  not_zero <- n != 0
 
 #	SGT algorithm (no type checking, as that's enforced above)
-	out <- .Call('simple_good_turing', PACKAGE = 'GTestimate', r, n, conf)
-	names(out) <- c("P0","proportion")
-	names(out$proportion) <- r
-	out$proportion
+	out <- .Call('simple_good_turing', PACKAGE = 'GTestimate', r[not_zero], n[not_zero], conf)
+	names(out) <- r[not_zero]
+	out
 }

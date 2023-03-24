@@ -4,7 +4,7 @@
 \alias{goodTuring}
 \title{goodTuring}
 \usage{
-goodTuring(freq_table, conf = 1.96)
+goodTuring(n, r, conf = 1.96)
 }
 \arguments{
 \item{x:}{input expression vector}

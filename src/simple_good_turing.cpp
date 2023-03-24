@@ -108,7 +108,8 @@ SEXP simple_good_turing (SEXP obs, SEXP freq, SEXP conf) {
         op*=factor;
     }
 
-    return Rcpp::List::create(Rcpp::NumericVector::create(PZero), outp);
+    //return Rcpp::List::create(Rcpp::NumericVector::create(PZero), outp);
+    return outp;
     END_RCPP
 }
 
