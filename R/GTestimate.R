@@ -70,8 +70,8 @@ GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform =
 #' @method GTestimate Seurat
 #' @rdname GTestimate
 #' @export
-GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE){
-  assay_data <- SeuratObject::GetAssayData(object, slot = 'counts')
+GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'RNA'){
+  assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
   GT_estimates <- GTestimate(assay_data, scale.factor = 1, log1p.transform = F)
   if (log1p.transform){
     object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = log1p(GT_estimates * scale.factor))
