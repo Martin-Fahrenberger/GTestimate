@@ -31,7 +31,9 @@ GTestimate(object, scale.factor, log1p.transform, assay)
 
 \item{log1p.transform}{If TRUE, the GT-estimates are multiplied by the scale.factor and log1p transformed, defaults to TRUE to behave similar to Seurat's LogNornalize}
 
-\item{assay}{For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.}
+\item{assay}{For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
+
+For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.}
 }
 \value{
 Returns object with Good-Turing gene expression estimates.

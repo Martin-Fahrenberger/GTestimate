@@ -4,6 +4,9 @@
 #' @param object An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.
 #' @param scale.factor Sets the scale factor for cell-level normalization, defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize
 #' @param log1p.transform If TRUE, the GT-estimates are multiplied by the scale.factor and log1p transformed, defaults to TRUE to behave similar to Seurat's LogNornalize
+#' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
+#'
+#' For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.
 #' @details GTestimate is the main function of the GTestimate package.
 #' It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
 #' GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, Seurat objects and SingleCellExperiment objects.
@@ -68,7 +71,6 @@ GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform =
   return(object)
 }
 #' @method GTestimate Seurat
-#' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
 #' @rdname GTestimate
 #' @export
 GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'RNA'){
@@ -87,7 +89,7 @@ GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TR
   object
 }
 #' @method GTestimate SingleCellExperiment
-#' @param assay For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.
+
 #' @rdname GTestimate
 #' @export
 GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'counts'){
