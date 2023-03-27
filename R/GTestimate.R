@@ -1,8 +1,21 @@
 #' GTestimate
 #'
-#'	Wrapper functions for Good Turing estimation of scRNA-seq relative gene expression estimation.
-#' @importFrom rlang abort
-#' @importFrom matrixStats colTabulates
+#' Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
+#' @param object An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.
+#' @param scale.factor Sets the scale factor for cell-level normalization, defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize
+#' @param log1p.transform If TRUE, the GT-estimates are multiplied by the scale.factor and log1p transformed, defaults to TRUE to behave similar to Seurat's LogNornalize
+#' @details GTestimate is the main function of the GTestimate package.
+#' It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
+#' GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, Seurat objects and SingleCellExperiment objects.
+#'
+#' For matrix input a matrix (either sparse or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
+#'
+#' For Seurat objects a new assay (called GTestimate) will be created within the object (and set as the DefaultAssay), additionally the missing_mass will be calculated and added as meta-data.
+#'
+#' For SingleCellExperiment objects a new assay (called GTestimate) will be created within the object, additionally the missing_mass will be calculated and added as colData.
+#'
+#' @return Returns object with Good-Turing gene expression estimates.
+#' @rdname GTestimate
 #' @export
 #' @examples
 #' library(Seurat)
@@ -10,49 +23,76 @@
 #' GTestimate(pbmc_small)
 
 
-GTestimate <- function(object, ...){
+GTestimate <- function(object, scale.factor, log1p.transform){
   UseMethod("GTestimate", object)
 }
+#' @method GTestimate matrix
+#' @rdname GTestimate
 #' @export
-GTestimate.matrix <- function(object, ...){
-  if(any(object%%1 != 0)) abort(message = 'Count matrix may only contain integers')
+GTestimate.matrix <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+  if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   res_mat <- matrix(0, nrow = nrow(object), ncol = ncol(object), dimnames = dimnames(object))
   for(i in 1:ncol(object)){
     counts <- as.integer(object[,i])
-    GT_res <- GTestimate::goodTuring(tabulate(counts), seq.int(from=1L,to=max(counts)))
+    GT_res <- goodTuring(r = seq.int(from=1L,to=max(counts)), n = tabulate(counts))
     zero <- counts == 0
     m <- match(counts[!zero], names(GT_res))
     res_mat[!zero,i] <- GT_res[m]
   }
-  res_mat
+  if (log1p.transform) {
+    return(log1p(res_mat * scale.factor))
+  } else {
+    return(res_mat * scale.factor)
+  }
 }
+#' @method GTestimate dgCMatrix
+#' @rdname GTestimate
 #' @export
-GTestimate.dgCMatrix <- function(object, ...){
-  if(any(object%%1 != 0)) abort(message = 'Count matrix may only contain integers')
+GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+  if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   freq_mat <- sparseMatrixStats::colTabulates(object)[,-1]
   freqs <- as.integer(colnames(freq_mat))
+  mat_entries <- object@x
   for(i in 1:ncol(object)){
     tmp_range <- seq.int(object@p[i]+1, object@p[i+1])
-    GT_res <- GTestimate::goodTuring(as.integer(freq_mat[i,]), freqs)
+    GT_res <- goodTuring(r = freqs, n = as.integer(freq_mat[i,]))
     m <- match(object@x[tmp_range], names(GT_res))
-    #m <- match(counts[counts!=0], names(GT_res))
-    #res_mat[counts!=0,i] <- GT_res[m]
-    object@x[tmp_range]  <- GT_res[m]
+    mat_entries[tmp_range]  <- GT_res[m]
   }
-  object
+  if (log1p.transform) {
+    mat_entries <- log1p(mat_entries * scale.factor)
+  } else {
+    mat_entries <- mat_entries * scale.factor
+  }
+  object@x <- mat_entries
+  return(object)
 }
+#' @method GTestimate Seurat
+#' @rdname GTestimate
 #' @export
-GTestimate.Seurat <- function(object, ...){
-  assay_data <- GetAssayData(object, slot = 'counts')
-  GT_estimates <- goodTuringProportions(as.matrix(assay_data))
-  object[['GTestimate']] <- CreateAssayObject(data = GT_estimates)
+GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+  assay_data <- SeuratObject::GetAssayData(object, slot = 'counts')
+  GT_estimates <- GTestimate(assay_data, scale.factor = 1, log1p.transform = F)
+  if (log1p.transform){
+    object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = log1p(GT_estimates * scale.factor))
+  } else{
+    object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = GT_estimates * scale.factor)
+  }
   DefaultAssay(object) <- 'GTestimate'
+  object <- SeuratObject::AddMetaData(object, metadata = 1 - sparseMatrixStats::colSums2(GT_estimates), col.name = 'missing_mass')
   object
 }
+#' @method GTestimate SingleCellExperiment
+#' @rdname GTestimate
 #' @export
-GTestimate.SingleCellExperiment <- function(object, ...){
+GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE){
   assay_data <- SummarizedExperiment::assay(object, 'counts')
-  GT_estimates <- goodTuringProportions(as.matrix(assay_data))
-  SummarizedExperiment::assay(object, 'GTestimate') <- GT_estimates
+  GT_estimates <- GTestimate(assay_data, scale.factor = 1, log1p.transform = F)
+  if (log1p.transform){
+    SummarizedExperiment::assay(object, 'GTestimate') <- log1p(GT_estimates * scale.factor)
+  } else {
+    SummarizedExperiment::assay(object, 'GTestimate') <- GT_estimates * scale.factor
+  }
+  SummarizedExperiment::colData(object) <- cbind(SummarizedExperiment::colData(object), missing_mass = 1 - sparseMatrixStats::colSums2(GT_estimates))
   object
 }

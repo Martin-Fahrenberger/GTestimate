@@ -3,14 +3,47 @@
 \docType{package}
 \name{GTestimate}
 \alias{GTestimate}
+\alias{GTestimate.matrix}
+\alias{GTestimate.dgCMatrix}
+\alias{GTestimate.Seurat}
+\alias{GTestimate.SingleCellExperiment}
 \title{GTestimate}
 \usage{
-GTestimate(object, ...)
+GTestimate(object, scale.factor, log1p.transform)
+
+\method{GTestimate}{matrix}(object, scale.factor = 10000, log1p.transform = T)
+
+\method{GTestimate}{dgCMatrix}(object, scale.factor = 10000, log1p.transform = T)
+
+\method{GTestimate}{Seurat}(object, scale.factor = 10000, log1p.transform = T)
+
+\method{GTestimate}{SingleCellExperiment}(object, scale.factor = 10000, log1p.transform = T)
+}
+\arguments{
+\item{object}{An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.}
+
+\item{scale.factor}{Sets the scale factor for cell-level normalization, defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize}
+
+\item{log1p.transform}{If true, the GT estimates multiplied by the scale.factor and log1p transformed, default to TRUE to behave similar to Seurat's LogNornalize}
+}
+\value{
+Returns object with Good-Turing gene expression estimates
 }
 \description{
-Wrapper functions for Good Turing estimation of scRNA-seq relative gene expression estimation.
+Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
 
 Description of your package
+}
+\details{
+GTestimate is the main function of the GTestimate package.
+It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
+GTestimate currently supports regular matrices, sparse dgCMatrix matrices, Seurat objects and SingleCellEcperiment objects as input.
+
+For matrix input a new matrix (either sparse or dense) will be returned containing the Good-Turing estimates for the given count-matrix
+
+For Seurat objects a new assay (called GTestimate) will be created within the object (and set as the DefaultAssay), additionally the missing_mass will be calculated and added as meta-data.
+
+For SingleCellExperiment objects a new assay (called GTestimate) will be created within the object, additionally the missing_mass will be calculated and added as colData.
 }
 \examples{
 library(Seurat)
