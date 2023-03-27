@@ -11,8 +11,11 @@ Implements the simple Good-Turing estimation for scRNA-seq relative gene express
 You can install the development version of GTestimate like so:
 
 ``` r
-# install.packages("devtools")
-# devtools::install_github("const-ae/sparseMatrixStats")
+if (!requireNamespace("devtools", quietly = TRUE))
+    install.packages("devtools")
+if (!requireNamespace("sparseMatrixStats", quietly = TRUE))
+  devtools::install_github("const-ae/sparseMatrixStats")
+
 devtools::install_github("Martin-Fahrenberger/GTestimate")
 ```
 
