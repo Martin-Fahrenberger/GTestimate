@@ -4,7 +4,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
+Implements simple Good-Turing estimator for scRNA-seq relative gene expression data.
 
 ## Installation
 
