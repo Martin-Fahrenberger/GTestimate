@@ -27,3 +27,7 @@ data('pbmc_small')
 GTestimate(pbmc_small)
 ```
 
+## Credit
+
+The core implementation of the Good-Turing estimator in C++ has been adapted from Aaron Lun's implementation for the edgeR package.
+His implementation was in turn based on Geoffrey Sampson's C code.
