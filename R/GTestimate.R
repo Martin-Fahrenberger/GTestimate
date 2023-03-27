@@ -23,7 +23,7 @@
 #' GTestimate(pbmc_small)
 
 
-GTestimate <- function(object, scale.factor, log1p.transform){
+GTestimate <- function(object, scale.factor, log1p.transform, assay){
   UseMethod("GTestimate", object)
 }
 #' @method GTestimate matrix
@@ -68,10 +68,14 @@ GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform =
   return(object)
 }
 #' @method GTestimate Seurat
+#' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
 #' @rdname GTestimate
 #' @export
 GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'RNA'){
   assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
+  if (any(dim(assay_data)==c(0,0))){
+    rlang::abort(message = paste0('The chosen assay ', assay, ' has no data in the counts slot'))
+  }
   GT_estimates <- GTestimate(assay_data, scale.factor = 1, log1p.transform = F)
   if (log1p.transform){
     object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = log1p(GT_estimates * scale.factor))
