@@ -87,10 +87,14 @@ GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TR
   object
 }
 #' @method GTestimate SingleCellExperiment
+#' @param assay For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.
 #' @rdname GTestimate
 #' @export
-GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE){
-  assay_data <- SummarizedExperiment::assay(object, 'counts')
+GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'counts'){
+  assay_data <- SummarizedExperiment::assay(object, assay)
+  if (any(dim(assay_data)==c(0,0))){
+    rlang::abort(message = paste0('The chosen assay ', assay, ' has no data'))
+  }
   GT_estimates <- GTestimate(assay_data, scale.factor = 1, log1p.transform = F)
   if (log1p.transform){
     SummarizedExperiment::assay(object, 'GTestimate') <- log1p(GT_estimates * scale.factor)
