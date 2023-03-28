@@ -4,7 +4,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-Implements simple Good-Turing estimator for scRNA-seq relative gene expression data.
+Implements simple Good-Turing estimation for scRNA-seq relative gene expression data.
 
 ## Installation
 
@@ -27,10 +27,10 @@ This is a basic example of how to use GTestimate to get Good-Turing frequency es
 library(GTestimate)
 library(Seurat)
 data('pbmc_small')
-GTestimate(pbmc_small)
+pbmc_small <- GTestimate(pbmc_small)
 ```
 
 ## Credit
 
-The core implementation of the Good-Turing estimator in C++ has been adapted from Aaron Lun's implementation for the edgeR package.
-His implementation was in turn based on Geoffrey Sampson's C code.
+The core implementation of the simple Good-Turing estimator in C++ has been adapted from Aaron Lun's implementation for the edgeR R-package.
+His implementation was in turn based on Geoffrey Sampson's C code acessible at https://www.grsampson.net/D_SGT.c

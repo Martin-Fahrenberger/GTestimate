@@ -17,22 +17,23 @@
 #'
 #' For SingleCellExperiment objects a new assay (called GTestimate) will be created within the object, additionally the missing_mass will be calculated and added as colData.
 #'
-#' @return Returns object with Good-Turing gene expression estimates.
+#' @return Returns object with Good-Turing gene expression estimates. For Seurat and SingleCellExperiment objects also adds a Metadata vector missing_mass which gives the estimated portion of mRNA's in the cell belonging to unobserved genes (refered to as P0 in Gale and Sampson 1995)
 #' @rdname GTestimate
 #' @export
 #' @examples
 #' library(Seurat)
 #' data('pbmc_small')
 #' GTestimate(pbmc_small)
-
-
 GTestimate <- function(object, scale.factor, log1p.transform, assay){
+  # Definition of the generic GTestimate method
   UseMethod("GTestimate", object)
 }
+
 #' @method GTestimate matrix
 #' @rdname GTestimate
 #' @export
 GTestimate.matrix <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+  # Definition of the GTestimate method for dense matrices
   if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   res_mat <- matrix(0, nrow = nrow(object), ncol = ncol(object), dimnames = dimnames(object))
   for(i in 1:ncol(object)){
@@ -48,10 +49,12 @@ GTestimate.matrix <- function(object, scale.factor = 10000, log1p.transform = TR
     return(res_mat * scale.factor)
   }
 }
+
 #' @method GTestimate dgCMatrix
 #' @rdname GTestimate
 #' @export
 GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+  # Definition of the GTestimate method for sparse dgCMatrices, designed to avoid conversion to dense matrix format
   if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   freq_mat <- sparseMatrixStats::colTabulates(object)[,-1]
   freqs <- as.integer(colnames(freq_mat))
@@ -70,10 +73,12 @@ GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform =
   object@x <- mat_entries
   return(object)
 }
+
 #' @method GTestimate Seurat
 #' @rdname GTestimate
 #' @export
 GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'RNA'){
+  # Definition of the GTestimate method for Seurat objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
   assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
   if (any(dim(assay_data)==c(0,0))){
     rlang::abort(message = paste0('The chosen assay ', assay, ' has no data in the counts slot'))
@@ -88,11 +93,12 @@ GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TR
   object <- SeuratObject::AddMetaData(object, metadata = 1 - sparseMatrixStats::colSums2(GT_estimates), col.name = 'missing_mass')
   object
 }
-#' @method GTestimate SingleCellExperiment
 
+#' @method GTestimate SingleCellExperiment
 #' @rdname GTestimate
 #' @export
 GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'counts'){
+  # Definition of the GTestimate method for SingleCellExperiment objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
   assay_data <- SummarizedExperiment::assay(object, assay)
   if (any(dim(assay_data)==c(0,0))){
     rlang::abort(message = paste0('The chosen assay ', assay, ' has no data'))
