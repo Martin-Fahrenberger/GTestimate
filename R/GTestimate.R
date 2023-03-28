@@ -9,9 +9,9 @@
 #' For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.
 #' @details GTestimate is the main function of the GTestimate package.
 #' It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
-#' GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, Seurat objects and SingleCellExperiment objects.
+#' GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, delayedMatrix matrices, Seurat objects and SingleCellExperiment objects.
 #'
-#' For matrix input a matrix (either sparse or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
+#' For matrix input a matrix (either sparse, delayed or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
 #'
 #' For Seurat objects a new assay (called GTestimate) will be created within the object (and set as the DefaultAssay), additionally the missing_mass will be calculated and added as meta-data.
 #'
@@ -72,6 +72,24 @@ GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform =
   }
   object@x <- mat_entries
   return(object)
+}
+
+#' @method GTestimate DelayedMatrix
+#' @rdname GTestimate
+#' @export
+GTestimate.DelayedMatrix <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+  # Definition of the GTestimate method for DelayedMatrices, this processes the input 1000 cells at a time and avoids loading it into memory.
+  grid <- DelayedArray::RegularArrayGrid(refdim = dim(object), spacings = c(nrow(object), min(1000L, ncol(object))))
+  DelayedArray::setAutoRealizationBackend("HDF5Array")
+  sink <- DelayedArray::AutoRealizationSink(dim = dim(object), dimnames = dimnames(object))
+  for (bid in seq_along(grid)){
+    a_viewport <- grid[[bid]]
+    block <- read_block(object, a_viewport, as.sparse = NA)
+    block <- GTestimate::GTestimate(as(block, 'dgCMatrix'), scale.factor, log1p.transform)
+    sink <- DelayedArray::write_block(sink = sink, block = block, viewport = a_viewport)
+  }
+  DelayedArray::close(sink)
+  return(as(as(sink, "DelayedArray"), "DelayedMatrix"))
 }
 
 #' @method GTestimate Seurat

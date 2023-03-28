@@ -5,6 +5,7 @@
 \alias{GTestimate}
 \alias{GTestimate.matrix}
 \alias{GTestimate.dgCMatrix}
+\alias{GTestimate.DelayedMatrix}
 \alias{GTestimate.Seurat}
 \alias{GTestimate.SingleCellExperiment}
 \title{GTestimate}
@@ -14,6 +15,8 @@ GTestimate(object, scale.factor, log1p.transform, assay)
 \method{GTestimate}{matrix}(object, scale.factor = 10000, log1p.transform = TRUE)
 
 \method{GTestimate}{dgCMatrix}(object, scale.factor = 10000, log1p.transform = TRUE)
+
+\method{GTestimate}{DelayedMatrix}(object, scale.factor = 10000, log1p.transform = TRUE)
 
 \method{GTestimate}{Seurat}(object, scale.factor = 10000, log1p.transform = TRUE, assay = "RNA")
 
@@ -36,7 +39,7 @@ GTestimate(object, scale.factor, log1p.transform, assay)
 For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.}
 }
 \value{
-Returns object with Good-Turing gene expression estimates.
+Returns object with Good-Turing gene expression estimates. For Seurat and SingleCellExperiment objects also adds a Metadata vector missing_mass which gives the estimated portion of mRNA's in the cell belonging to unobserved genes (refered to as P0 in Gale and Sampson 1995)
 }
 \description{
 Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
@@ -46,9 +49,9 @@ Description of your package
 \details{
 GTestimate is the main function of the GTestimate package.
 It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
-GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, Seurat objects and SingleCellExperiment objects.
+GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, delayedMatrix matrices, Seurat objects and SingleCellExperiment objects.
 
-For matrix input a matrix (either sparse or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
+For matrix input a matrix (either sparse, delayed or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
 
 For Seurat objects a new assay (called GTestimate) will be created within the object (and set as the DefaultAssay), additionally the missing_mass will be calculated and added as meta-data.
 
