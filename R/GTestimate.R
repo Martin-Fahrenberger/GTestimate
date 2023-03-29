@@ -7,6 +7,8 @@
 #' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
 #'
 #' For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.
+#' @param block_size For DelayedArray ojects defines the number of cells read into memory at the same time, this defaults to 1000. Smaller block_sizes require less RAM, but will significantly increase runtime.
+#' A minimum of 100 is enforced to protect the user.
 #' @details GTestimate is the main function of the GTestimate package.
 #' It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
 #' GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, delayedMatrix matrices, Seurat objects and SingleCellExperiment objects.
@@ -24,7 +26,7 @@
 #' library(Seurat)
 #' data('pbmc_small')
 #' GTestimate(pbmc_small)
-GTestimate <- function(object, scale.factor, log1p.transform, assay){
+GTestimate <- function(object, scale.factor, log1p.transform, assay, block_size){
   # Definition of the generic GTestimate method
   UseMethod("GTestimate", object)
 }
@@ -77,9 +79,9 @@ GTestimate.dgCMatrix <- function(object, scale.factor = 10000, log1p.transform =
 #' @method GTestimate DelayedMatrix
 #' @rdname GTestimate
 #' @export
-GTestimate.DelayedMatrix <- function(object, scale.factor = 10000, log1p.transform = TRUE){
+GTestimate.DelayedMatrix <- function(object, scale.factor = 10000, log1p.transform = TRUE, block_size = 1000L){
   # Definition of the GTestimate method for DelayedMatrices, this processes the input 1000 cells at a time and avoids loading it into memory.
-  grid <- DelayedArray::RegularArrayGrid(refdim = dim(object), spacings = c(nrow(object), min(1000L, ncol(object))))
+  grid <- DelayedArray::RegularArrayGrid(refdim = dim(object), spacings = c(nrow(object), min(max(block_size, 100), ncol(object))))
   DelayedArray::setAutoRealizationBackend("HDF5Array")
   sink <- DelayedArray::AutoRealizationSink(dim = dim(object), dimnames = dimnames(object))
   for (bid in seq_along(grid)){
@@ -95,7 +97,7 @@ GTestimate.DelayedMatrix <- function(object, scale.factor = 10000, log1p.transfo
 #' @method GTestimate Seurat
 #' @rdname GTestimate
 #' @export
-GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'RNA'){
+GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'RNA', block_size = 1000L){
   # Definition of the GTestimate method for Seurat objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
   assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
   if (any(dim(assay_data)==c(0,0))){
@@ -115,7 +117,7 @@ GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TR
 #' @method GTestimate SingleCellExperiment
 #' @rdname GTestimate
 #' @export
-GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'counts'){
+GTestimate.SingleCellExperiment <- function(object, scale.factor = 10000, log1p.transform = TRUE, assay = 'counts', block_size = 1000L){
   # Definition of the GTestimate method for SingleCellExperiment objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
   assay_data <- SummarizedExperiment::assay(object, assay)
   if (any(dim(assay_data)==c(0,0))){
