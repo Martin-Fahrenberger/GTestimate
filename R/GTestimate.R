@@ -111,7 +111,7 @@ GTestimate.Seurat <- function(object, scale.factor = 10000, log1p.transform = TR
   }
   DefaultAssay(object) <- 'GTestimate'
   object <- SeuratObject::AddMetaData(object, metadata = 1 - sparseMatrixStats::colSums2(GT_estimates), col.name = 'missing_mass')
-  object <- LogSeuratCommand(object = object)
+  object <- SeuratObject::LogSeuratCommand(object = object)
   object
 }
 
