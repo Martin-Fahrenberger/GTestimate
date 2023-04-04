@@ -40,7 +40,8 @@ GTestimate(
   scale.factor = 10000,
   size.factors = NA,
   log1p.transform = TRUE,
-  .return_mm = FALSE
+  .return_mm = FALSE,
+  block_size = 1000L
 )
 
 \method{GTestimate}{Seurat}(
@@ -62,13 +63,18 @@ GTestimate(
 \arguments{
 \item{object}{An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.}
 
-\item{scale.factor}{Sets the scale factor for cell-level normalization, defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize}
+\item{scale.factor}{Sets the library-size to normalize all cells to, defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize}
+
+\item{size.factors}{A numeric vector with one entry per cell, sets scale factors for cell-level normalization (size factors cann be calculated with e.g. scuttle::pooledSizeFactors())}
 
 \item{log1p.transform}{If TRUE, the GT-estimates are multiplied by the scale.factor and log1p transformed, defaults to TRUE to behave similar to Seurat's LogNornalize}
 
 \item{assay}{For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
 
 For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.}
+
+\item{block_size}{For DelayedArray ojects defines the number of cells read into memory at the same time, this defaults to 1000. Smaller block_sizes require less RAM, but will significantly increase runtime.
+A minimum of 100 is enforced to protect the user.}
 }
 \value{
 Returns object with Good-Turing gene expression estimates. For Seurat and SingleCellExperiment objects also adds a Metadata vector missing_mass which gives the estimated portion of mRNA's in the cell belonging to unobserved genes (refered to as P0 in Gale and Sampson 1995)
