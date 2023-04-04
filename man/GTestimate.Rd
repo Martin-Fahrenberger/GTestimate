@@ -16,7 +16,8 @@ GTestimate(
   size.factors,
   log1p.transform,
   assay,
-  .return_mm
+  .return_mm,
+  block_size
 )
 
 \method{GTestimate}{matrix}(
