@@ -27,7 +27,7 @@
 #' library(Seurat)
 #' data('pbmc_small')
 #' GTestimate(pbmc_small)
-GTestimate <- function(object, scale.factor, size.factors, log1p.transform, assay, .return_mm){
+GTestimate <- function(object, scale.factor, size.factors, log1p.transform, assay, .return_mm, block_size){
   # Definition of the generic GTestimate method
   rlang::check_exclusive(scale.factor, size.factors, .require = FALSE)
   UseMethod("GTestimate", object)
