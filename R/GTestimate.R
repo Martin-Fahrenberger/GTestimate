@@ -2,7 +2,7 @@
 #'
 #' Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
 #' @param object An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.
-#' @param size.factor Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors cann be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize.
+#' @param size.factor Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize.
 #' @param log1p.transform If TRUE, the GT-estimates are log1p transformed, defaults to TRUE to behave similar to Seurat's LogNornalize
 #' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
 #'
@@ -26,7 +26,7 @@
 #' library(Seurat)
 #' data('pbmc_small')
 #' GTestimate(pbmc_small)
-GTestimate <- function(object, size.factor, log1p.transform, assay, .return_mm, block_size){
+GTestimate <- function(object, size.factor, log1p.transform, assay, block_size, .return_mm, .mean_cell_size){
   # Definition of the generic GTestimate method
   UseMethod("GTestimate", object)
 }
@@ -34,9 +34,9 @@ GTestimate <- function(object, size.factor, log1p.transform, assay, .return_mm, 
 #' @method GTestimate matrix
 #' @rdname GTestimate
 #' @export
-GTestimate.matrix <- function(object, size.factor = 10000, log1p.transform = TRUE, .return_mm = FALSE){
+GTestimate.matrix <- function(object, size.factor = 10000, log1p.transform = TRUE, .return_mm = FALSE, .mean_cell_size = NA){
   # Definition of the GTestimate method for dense matrices
-  if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
+    if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   res_mat <- matrix(0, nrow = nrow(object), ncol = ncol(object), dimnames = dimnames(object))
   for(i in 1:ncol(object)){
     counts <- as.integer(object[,i])
@@ -51,7 +51,10 @@ GTestimate.matrix <- function(object, size.factor = 10000, log1p.transform = TRU
   }
 
   if(length(size.factor) == ncol(object)){
-    res_mat <- t(t(res_mat)/size.factor)
+    if(is.na(.mean_cell_size)){
+      mean_cell_size <- mean(sparseMatrixStats::colSums2(object))
+    }
+    res_mat <- t(t(res_mat)/size.factor) * mean_cell_size
   } else if(length(size.factor) == 1){
     res_mat <- res_mat * size.factor
   } else {
@@ -72,7 +75,7 @@ GTestimate.matrix <- function(object, size.factor = 10000, log1p.transform = TRU
 #' @method GTestimate dgCMatrix
 #' @rdname GTestimate
 #' @export
-GTestimate.dgCMatrix <- function(object, size.factor = 10000, log1p.transform = TRUE, .return_mm = FALSE){
+GTestimate.dgCMatrix <- function(object, size.factor = 10000, log1p.transform = TRUE, .return_mm = FALSE, .mean_cell_size = NA){
   # Definition of the GTestimate method for sparse dgCMatrices, designed to avoid conversion to dense matrix format
   if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   freq_mat <- sparseMatrixStats::colTabulates(object)[,-1]
@@ -80,11 +83,14 @@ GTestimate.dgCMatrix <- function(object, size.factor = 10000, log1p.transform = 
   mat_entries <- object@x
 
   if(length(size.factor) == ncol(object)){
+    if(is.na(.mean_cell_size)){
+      mean_cell_size <- mean(sparseMatrixStats::colSums2(object))
+    }
     for(i in 1:ncol(object)){
       tmp_range <- seq.int(object@p[i]+1, object@p[i+1])
       GT_res <- goodTuring(r = freqs, n = as.integer(freq_mat[i,]))
       m <- match(object@x[tmp_range], names(GT_res))
-      mat_entries[tmp_range]  <- GT_res[m] * size.factor[i]
+      mat_entries[tmp_range]  <- GT_res[m] * size.factor[i] * mean_cell_size
     }
   } else if(length(size.factor == 1)){
     for(i in 1:ncol(object)){
@@ -128,11 +134,12 @@ GTestimate.DelayedMatrix <- function(object, size.factor = 10000, log1p.transfor
   }
 
   if(length(size.factor) == ncol(object)){
+    mean_cell_size <- mean(colSums2(object))
     for (bid in seq_along(grid)){
       a_viewport <- grid[[bid]]
       tmp_range <- start(a_viewport@ranges)[2]:end(a_viewport@ranges)[2]
       block <- read_block(object, a_viewport, as.sparse = NA)
-      gt_estimates <- GTestimate::GTestimate(as(block, 'dgCMatrix'), size.factor = size.factor[tmp_range], log1p.transform, .return_mm)
+      gt_estimates <- GTestimate::GTestimate(as(block, 'dgCMatrix'), size.factor = size.factor[tmp_range], log1p.transform, .return_mm, .mean_cell_size = mean_cell_size)
       if(return_mm){
         sink <- DelayedArray::write_block(sink = sink, block = gt_estimates$gt_estimates, viewport = a_viewport)
         missing_mass <- append(missing_mass, gt_estimates$gt_estimates)

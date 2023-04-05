@@ -10,20 +10,30 @@
 \alias{GTestimate.SingleCellExperiment}
 \title{GTestimate}
 \usage{
-GTestimate(object, size.factor, log1p.transform, assay, .return_mm, block_size)
+GTestimate(
+  object,
+  size.factor,
+  log1p.transform,
+  assay,
+  block_size,
+  .return_mm,
+  .mean_cell_size
+)
 
 \method{GTestimate}{matrix}(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
-  .return_mm = FALSE
+  .return_mm = FALSE,
+  .mean_cell_size = NA
 )
 
 \method{GTestimate}{dgCMatrix}(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
-  .return_mm = FALSE
+  .return_mm = FALSE,
+  .mean_cell_size = NA
 )
 
 \method{GTestimate}{DelayedMatrix}(
