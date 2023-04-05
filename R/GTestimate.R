@@ -137,8 +137,8 @@ GTestimate.DelayedMatrix <- function(object, size.factor = 10000, log1p.transfor
     sum_of_counts <- 0
     for (bid in seq_along(grid)){
       a_viewport <- grid[[bid]]
-      block <- read_block(object, a_viewport, as.sparse = NA)
-      sum_of_counts <- sum_of_counts + sum(block)
+      tmp_block <- read_block(object, a_viewport, as.sparse = NA)
+      sum_of_counts <- sum_of_counts + sum(tmp_block)
     }
     mean_cell_size <- sum_of_counts/ncol(object)
     for (bid in seq_along(grid)){
