@@ -17,3 +17,6 @@ LinkingTo:
     Rcpp
 URL: https://github.com/Martin-Fahrenberger/GTestimate
 BugReports: https://github.com/Martin-Fahrenberger/GTestimate/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
