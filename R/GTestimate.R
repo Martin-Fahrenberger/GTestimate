@@ -26,7 +26,7 @@
 #' library(Seurat)
 #' data('pbmc_small')
 #' GTestimate(pbmc_small)
-GTestimate <- function(object, size.factor = 10000, log1p.transform = TRUE, block.size, assay, .return_mm){
+GTestimate <- function(object, size.factor = 10000, log1p.transform = TRUE, block.size, assay){
   # Definition of the generic GTestimate method
   if(!(is.numeric(size.factor))) rlang::abort(message = 'Argument size.factor has to be numeric')
   if(!(is.logical(log1p.transform))) rlang::abort(message = 'Argument log1p.transform has to be logical')
@@ -36,8 +36,13 @@ GTestimate <- function(object, size.factor = 10000, log1p.transform = TRUE, bloc
 #' @method GTestimate matrix
 #' @rdname GTestimate
 #' @export
-GTestimate.matrix <- function(object, size.factor, log1p.transform, .return_mm = FALSE){
+GTestimate.matrix <- function(object, size.factor = 10000, log1p.transform = TRUE){
   # Definition of the GTestimate method for dense matrices
+
+  # Detect if method call came from Seurat or SingleCellExperiment object to decide if missing_mass should be returned
+  return_mm <- any(c(grepl('GTestimate.Seurat', deparse(sys.calls())),
+                     grepl('GTestimate.SingleCellExperiment', deparse(sys.calls()))))
+
   if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   res_mat <- matrix(0, nrow = nrow(object), ncol = ncol(object), dimnames = dimnames(object))
   for(i in 1:ncol(object)){
@@ -48,7 +53,7 @@ GTestimate.matrix <- function(object, size.factor, log1p.transform, .return_mm =
     res_mat[!zero,i] <- GT_res[m]
   }
 
-  if(.return_mm) {
+  if(return_mm) {
     missing_mass <- 1 - sparseMatrixStats::colSums2(res_mat)
   }
 
@@ -63,7 +68,7 @@ GTestimate.matrix <- function(object, size.factor, log1p.transform, .return_mm =
   if(log1p.transform) {
     res_mat <- log1p(res_mat)
   }
-  if(.return_mm){
+  if(return_mm){
     return(list(gt_estimates = res_mat, missing_mass = missing_mass))
   } else{
     return(res_mat)
@@ -74,13 +79,18 @@ GTestimate.matrix <- function(object, size.factor, log1p.transform, .return_mm =
 #' @method GTestimate dgCMatrix
 #' @rdname GTestimate
 #' @export
-GTestimate.dgCMatrix <- function(object, size.factor, log1p.transform, .return_mm = FALSE){
+GTestimate.dgCMatrix <- function(object, size.factor = 10000, log1p.transform = TRUE){
   # Definition of the GTestimate method for sparse dgCMatrices, designed to avoid conversion to dense matrix format
+
+  # Detect if method call came from Seurat or SingleCellExperiment object to decide if missing_mass should be returned
+  return_mm <- any(c(grepl('GTestimate.Seurat', deparse(sys.calls())),
+                     grepl('GTestimate.SingleCellExperiment', deparse(sys.calls()))))
+
   if(any(object%%1 != 0)) rlang::abort(message = 'Count matrix may only contain integers')
   freq_mat <- sparseMatrixStats::colTabulates(object)[,-1]
   freqs <- as.integer(colnames(freq_mat))
   mat_entries <- object@x
-  if (.return_mm){
+  if (return_mm){
     missing_mass <- c()
     if(length(size.factor) == ncol(object)){
       for(i in 1:ncol(object)){
@@ -127,7 +137,7 @@ GTestimate.dgCMatrix <- function(object, size.factor, log1p.transform, .return_m
   }
   object@x <- mat_entries
 
-  if(.return_mm){
+  if(return_mm){
     return(list(gt_estimates = object, missing_mass = missing_mass))
   } else{
     return(object)
@@ -137,13 +147,18 @@ GTestimate.dgCMatrix <- function(object, size.factor, log1p.transform, .return_m
 #' @method GTestimate DelayedMatrix
 #' @rdname GTestimate
 #' @export
-GTestimate.DelayedMatrix <- function(object, size.factor, log1p.transform, .return_mm = FALSE, block.size = 1000L){
+GTestimate.DelayedMatrix <- function(object, size.factor = 10000, log1p.transform = TRUE, block.size = 1000L){
   # Definition of the GTestimate method for DelayedMatrices, this processes the input 1000 cells at a time and avoids loading it into memory.
+
+  # Detect if method call came from Seurat or SingleCellExperiment object to decide if missing_mass should be returned
+  return_mm <- any(c(grepl('GTestimate.Seurat', deparse(sys.calls())),
+                     grepl('GTestimate.SingleCellExperiment', deparse(sys.calls()))))
+
   if(!(is.numeric(block.size)) | length(block.size) != 1) rlang::abort(message = 'Argument block.size must be a single number')
   grid <- DelayedArray::RegularArrayGrid(refdim = dim(object), spacings = c(nrow(object), min(max(block.size, 100), ncol(object))))
   DelayedArray::setAutoRealizationBackend("HDF5Array")
   sink <- DelayedArray::AutoRealizationSink(dim = dim(object), dimnames = dimnames(object))
-  if(.return_mm){
+  if(return_mm){
     missing_mass <- c()
   }
 
@@ -158,8 +173,8 @@ GTestimate.DelayedMatrix <- function(object, size.factor, log1p.transform, .retu
       a_viewport <- grid[[bid]]
       tmp_range <- start(a_viewport@ranges)[2]:end(a_viewport@ranges)[2]
       block <- read_block(object, a_viewport, as.sparse = NA)
-      gt_estimates <- GTestimate::GTestimate(as(block, 'dgCMatrix'), size.factor = size.factor[tmp_range], log1p.transform, .return_mm)
-      if(.return_mm){
+      gt_estimates <- GTestimate::GTestimate(as(block, 'dgCMatrix'), size.factor = size.factor[tmp_range], log1p.transform)
+      if(return_mm){
         sink <- DelayedArray::write_block(sink = sink, block = gt_estimates$gt_estimates, viewport = a_viewport)
         missing_mass <- c(missing_mass, gt_estimates$missing_mass)
       } else {
@@ -170,8 +185,8 @@ GTestimate.DelayedMatrix <- function(object, size.factor, log1p.transform, .retu
     for (bid in seq_along(grid)){
       a_viewport <- grid[[bid]]
       block <- read_block(object, a_viewport, as.sparse = NA)
-      gt_estimates <- GTestimate::GTestimate(as(block, 'dgCMatrix'), size.factor, log1p.transform, .return_mm)
-      if(.return_mm){
+      gt_estimates <- GTestimate::GTestimate(as(block, 'dgCMatrix'), size.factor, log1p.transform)
+      if(return_mm){
            sink <- DelayedArray::write_block(sink = sink, block = gt_estimates$gt_estimates, viewport = a_viewport)
            missing_mass <- c(missing_mass, gt_estimates$missing_mass)
       } else {
@@ -185,7 +200,7 @@ GTestimate.DelayedMatrix <- function(object, size.factor, log1p.transform, .retu
   DelayedArray::close(sink)
   sink <- as(as(sink, "DelayedArray"), "DelayedMatrix")
 
-  if(.return_mm){
+  if(return_mm){
     return(list(gt_estimates = sink, missing_mass = missing_mass))
   } else{
     return(sink)
@@ -195,13 +210,13 @@ GTestimate.DelayedMatrix <- function(object, size.factor, log1p.transform, .retu
 #' @method GTestimate Seurat
 #' @rdname GTestimate
 #' @export
-GTestimate.Seurat <- function(object, size.factor, log1p.transform, assay = 'RNA', ...){
+GTestimate.Seurat <- function(object, size.factor = 10000, log1p.transform = TRUE, assay = 'RNA', ...){
   # Definition of the GTestimate method for Seurat objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
   assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
   if (any(dim(assay_data)==c(0,0))){
     rlang::abort(message = 'The chosen assay has no data in the counts slot')
   }
-  GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, .return_mm = TRUE, ...)
+  GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, ...)
 
   object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = GT_estimates$gt_estimates)
 
@@ -213,13 +228,13 @@ GTestimate.Seurat <- function(object, size.factor, log1p.transform, assay = 'RNA
 #' @method GTestimate SingleCellExperiment
 #' @rdname GTestimate
 #' @export
-GTestimate.SingleCellExperiment <- function(object, size.factor, log1p.transform, assay = 'counts', ...){
+GTestimate.SingleCellExperiment <- function(object, size.factor = 10000, log1p.transform = TRUE, assay = 'counts', ...){
   # Definition of the GTestimate method for SingleCellExperiment objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
   assay_data <- SummarizedExperiment::assay(object, assay)
   if (any(dim(assay_data)==c(0,0))){
     rlang::abort(message = 'The chosen assay has no data')
   }
-  GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, .return_mm = TRUE, ...)
+  GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, ...)
   SummarizedExperiment::assay(object, 'GTestimate') <- GT_estimates$gt_estimates
   SummarizedExperiment::colData(object) <- cbind(SummarizedExperiment::colData(object), missing_mass = GT_estimates$missing_mass)
   object

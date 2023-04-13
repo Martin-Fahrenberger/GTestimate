@@ -3,6 +3,7 @@ library(SingleCellExperiment)
 library(DelayedArray)
 library(HDF5Array)
 data('pbmc_small')
+
 test_dgCMatrix <- GetAssayData(pbmc_small, slot = 'counts')
 test_matrix <- as.matrix(test_dgCMatrix)
 test_sf <- scuttle::computePooledFactors(as.SingleCellExperiment(pbmc_small))$sizeFactor
@@ -35,6 +36,13 @@ assay(test_sce_delayed, 'counts') <- test_delayed
     testthat::expect_equal(
       log1p((edgeR::goodTuringProportions(test_matrix) * 10000) %>% replace(test_matrix==0,0)),
       GTestimate::GTestimate(test_matrix, size.factor = 10000, log1p.transform = T)
+    )
+  })
+
+  test_that("GTestimate.matrix default parameters", {
+    testthat::expect_equal(
+      log1p((edgeR::goodTuringProportions(test_matrix) * 10000) %>% replace(test_matrix==0,0)),
+      GTestimate::GTestimate(test_matrix)
     )
   })
 

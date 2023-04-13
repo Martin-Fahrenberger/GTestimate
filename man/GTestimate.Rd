@@ -15,25 +15,35 @@ GTestimate(
   size.factor = 10000,
   log1p.transform = TRUE,
   block.size,
-  assay,
-  .return_mm
+  assay
 )
 
-\method{GTestimate}{matrix}(object, size.factor, log1p.transform, .return_mm = FALSE)
+\method{GTestimate}{matrix}(object, size.factor = 10000, log1p.transform = TRUE)
 
-\method{GTestimate}{dgCMatrix}(object, size.factor, log1p.transform, .return_mm = FALSE)
+\method{GTestimate}{dgCMatrix}(object, size.factor = 10000, log1p.transform = TRUE)
 
 \method{GTestimate}{DelayedMatrix}(
   object,
-  size.factor,
-  log1p.transform,
-  .return_mm = FALSE,
+  size.factor = 10000,
+  log1p.transform = TRUE,
   block.size = 1000L
 )
 
-\method{GTestimate}{Seurat}(object, size.factor, log1p.transform, assay = "RNA", ...)
+\method{GTestimate}{Seurat}(
+  object,
+  size.factor = 10000,
+  log1p.transform = TRUE,
+  assay = "RNA",
+  ...
+)
 
-\method{GTestimate}{SingleCellExperiment}(object, size.factor, log1p.transform, assay = "counts", ...)
+\method{GTestimate}{SingleCellExperiment}(
+  object,
+  size.factor = 10000,
+  log1p.transform = TRUE,
+  assay = "counts",
+  ...
+)
 }
 \arguments{
 \item{object}{An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.}
