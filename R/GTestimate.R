@@ -15,7 +15,7 @@
 #'
 #' For matrix input a matrix (either sparse, delayed or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
 #'
-#' For Seurat objects a new assay (called GTestimate) will be created within the object (and set as the DefaultAssay), additionally the missing_mass will be calculated and added as meta-data.
+#' For Seurat objects a new GTestimate assay will be created within the object (and set as the DefaultAssay). This assay copies the previous counts-data into it's counts slot, and adds the GTestimates in the data slot, additionally the missing_mass will be calculated and added as meta-data.
 #'
 #' For SingleCellExperiment objects a new assay (called GTestimate) will be created within the object, additionally the missing_mass will be calculated and added as colData.
 #'
@@ -219,7 +219,7 @@ GTestimate.Seurat <- function(object, size.factor = 10000, log1p.transform = TRU
   GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, ...)
 
   object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = GT_estimates$gt_estimates)
-
+  object@assays$GTestimate@counts <- GetAssayData(object, assay = assay, slot = 'counts')
   DefaultAssay(object) <- 'GTestimate'
   object <- SeuratObject::AddMetaData(object, metadata = GT_estimates$missing_mass, col.name = 'missing_mass')
   object <- SeuratObject::LogSeuratCommand(object = object)

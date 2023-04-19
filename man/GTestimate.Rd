@@ -74,7 +74,7 @@ GTestimate currently provides methods for regular matrices, sparse dgCMatrix mat
 
 For matrix input a matrix (either sparse, delayed or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
 
-For Seurat objects a new assay (called GTestimate) will be created within the object (and set as the DefaultAssay), additionally the missing_mass will be calculated and added as meta-data.
+For Seurat objects a new GTestimate assay will be created within the object (and set as the DefaultAssay). This assay copies the previous counts-data into it's counts slot, and adds the GTestimates in the data slot, additionally the missing_mass will be calculated and added as meta-data.
 
 For SingleCellExperiment objects a new assay (called GTestimate) will be created within the object, additionally the missing_mass will be calculated and added as colData.
 }
