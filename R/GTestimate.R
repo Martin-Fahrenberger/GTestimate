@@ -222,6 +222,7 @@ GTestimate.Seurat <- function(object, size.factor = 10000, log1p.transform = TRU
 
   DefaultAssay(object) <- 'GTestimate'
   object <- SeuratObject::AddMetaData(object, metadata = GT_estimates$missing_mass, col.name = 'missing_mass')
+  object <- SeuratObject::LogSeuratCommand(object = object)
   object
 }
 
