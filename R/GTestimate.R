@@ -1,7 +1,7 @@
 #' GTestimate
 #'
-#' Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
-#' @param object An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.
+#' @description Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
+#' @param object An object containing a scRNA-seq count-matrix in a gene x counts format.
 #' @param size.factor Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize.
 #' @param log1p.transform If TRUE, the GT-estimates are log1p transformed, defaults to TRUE to behave similar to Seurat's LogNormalize
 #' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
@@ -57,10 +57,10 @@ GTestimate.matrix <- function(object, size.factor = 10000, log1p.transform = TRU
     missing_mass <- 1 - sparseMatrixStats::colSums2(res_mat)
   }
 
-  if(length(size.factor) == ncol(object)){
-    res_mat <- t(t(res_mat)*sparseMatrixStats::colSums2(object)/size.factor)
-  } else if(length(size.factor) == 1){
+  if(length(size.factor) == 1){
     res_mat <- res_mat * size.factor
+  } else if(length(size.factor) == ncol(object)){
+    res_mat <- t(t(res_mat)*sparseMatrixStats::colSums2(object)/size.factor)
   } else {
     rlang::abort(message = 'Length of size.factor must be 1 or equal to number of columns in object')
   }

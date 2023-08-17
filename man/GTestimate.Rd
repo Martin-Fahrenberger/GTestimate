@@ -46,7 +46,7 @@ GTestimate(
 )
 }
 \arguments{
-\item{object}{An object containing a scRNA-seq count-matrix with each column containing one cell's gene expression vector.}
+\item{object}{An object containing a scRNA-seq count-matrix in a gene x counts format.}
 
 \item{size.factor}{Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize.}
 
