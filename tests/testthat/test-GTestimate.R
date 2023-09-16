@@ -48,12 +48,11 @@ assay(test_sce_delayed, 'counts') <- test_delayed
 
   test_that("GTestimate.matrix size.factor = computePooledFactors() log1p.transform = TRUE", {
     testthat::expect_equal(
-      log1p(t(t(edgeR::goodTuringProportions(test_matrix)%>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix)%>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix)%>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
       GTestimate::GTestimate(test_matrix, size.factor = test_sf, log1p.transform = T)
     )
   })
 }
-# I somehow fucked up the GTestimate function while trying to rework how size.factors work, I have to change this so size.factors and missing mass arent both applied and then rerun all the benchmarking...
 
 {
   test_that("GTestimate.dgCMatrix size.factor = 1 log1p.transform = FALSE", {
@@ -79,7 +78,7 @@ assay(test_sce_delayed, 'counts') <- test_delayed
 
   test_that("GTestimate.dgCMatrix size.factor = computePooledFactors() log1p.transform = TRUE", {
     testthat::expect_equal(
-      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
       as.matrix(GTestimate::GTestimate(test_dgCMatrix, size.factor = test_sf, log1p.transform = T))
     )
   })
@@ -108,7 +107,7 @@ assay(test_sce_delayed, 'counts') <- test_delayed
 
   test_that("GTestimate.DelayedMatrix size.factor = computePooledFactors() log1p.transform = TRUE", {
     testthat::expect_equal(
-      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
       as.matrix(GTestimate::GTestimate(test_delayed, size.factor = test_sf, log1p.transform = T))
     )
   })
@@ -138,7 +137,7 @@ assay(test_sce_delayed, 'counts') <- test_delayed
 
   test_that("GTestimate.Seurat size.factor = computePooledFactors() log1p.transform = TRUE", {
     testthat::expect_equal(
-      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
       as.matrix(GetAssayData(GTestimate::GTestimate(pbmc_small, size.factor = test_sf, log1p.transform = T), slot = 'data', assay = 'GTestimate'))
     )
   })
@@ -176,8 +175,7 @@ assay(test_sce_delayed, 'counts') <- test_delayed
     testthat::expect_equal(
       edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0),
       as.matrix(GTestimate::GTestimate(test_sce, size.factor = 1, log1p.transform = F)@assays@data$GTestimate)
-      #as.matrix(SummarizedExperiment::assay(GTestimate::GTestimate(test_sce, size.factor = 1, log1p.transform = F),'GTestimate'))
-    )
+      )
   })
 
   test_that("GTestimate.SingleCellExperiment size.factor = 10000 log1p.transform = FALSE", {
@@ -196,14 +194,14 @@ assay(test_sce_delayed, 'counts') <- test_delayed
 
   test_that("GTestimate.SingleCellExperiment size.factor = computePooledFactors() log1p.transform = TRUE", {
     testthat::expect_equal(
-      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
       as.matrix(assay(GTestimate::GTestimate(test_sce, size.factor = test_sf, log1p.transform = T), 'GTestimate'))
     )
   })
 
   test_that("GTestimate.SingleCellExperiment delayed size.factor = computePooledFactors() log1p.transform = TRUE", {
     testthat::expect_equal(
-      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
       as.matrix(assay(GTestimate::GTestimate(test_sce_delayed, size.factor = test_sf, log1p.transform = T), 'GTestimate'))
     )
   })
@@ -233,6 +231,224 @@ assay(test_sce_delayed, 'counts') <- test_delayed
     testthat::expect_equal(
       as.numeric(1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
       GTestimate::GTestimate(test_sce_delayed, size.factor = test_sf, log1p.transform = T)$missing_mass
+    )
+  })
+}
+
+{
+  test_that("GTestimate.matrix size.factor = 1 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      GTestimate::GTestimate(test_matrix, size.factor = 1, log1p.transform = F, rescale = T)
+    )
+  })
+  
+  test_that("GTestimate.matrix size.factor = 10000 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000,
+      GTestimate::GTestimate(test_matrix, size.factor = 10000, log1p.transform = F, rescale = T)
+    )
+  })
+  
+  test_that("GTestimate.matrix size.factor = 10000 log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000),
+      GTestimate::GTestimate(test_matrix, size.factor = 10000, log1p.transform = T, rescale = T)
+    )
+  })
+  
+  test_that("GTestimate.matrix default parameters", {
+    testthat::expect_equal(
+      log1p((edgeR::goodTuringProportions(test_matrix) * 10000) %>% replace(test_matrix==0,0)),
+      GTestimate::GTestimate(test_matrix)
+    )
+  })
+  
+  test_that("GTestimate.matrix size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix)%>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix)%>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      GTestimate::GTestimate(test_matrix, size.factor = test_sf, log1p.transform = T, rescale = T)
+    )
+  })
+}
+
+{
+  test_that("GTestimate.dgCMatrix size.factor = 1 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      as.matrix(GTestimate::GTestimate(test_dgCMatrix, size.factor = 1, log1p.transform = F, rescale = T))
+    )
+  })
+  
+  test_that("GTestimate.dgCMatrix size.factor = 10000 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * 10000),
+      as.matrix(GTestimate::GTestimate(test_dgCMatrix, size.factor = 10000, log1p.transform = F, rescale = T))
+    )
+  })
+  
+  test_that("GTestimate.dgCMatrix size.factor = 10000 log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000),
+      as.matrix(GTestimate::GTestimate(test_dgCMatrix, size.factor = 10000, log1p.transform = T, rescale = T))
+    )
+  })
+  
+  test_that("GTestimate.dgCMatrix size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      as.matrix(GTestimate::GTestimate(test_dgCMatrix, size.factor = test_sf, log1p.transform = T, rescale = T))
+    )
+  })
+}
+{
+  test_that("GTestimate.DelayedMatrix size.factor = 1 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      as.matrix(GTestimate::GTestimate(test_delayed, size.factor = 1, log1p.transform = F, rescale = T))
+    )
+  })
+  
+  test_that("GTestimate.DelayedMatrix size.factor = 10000 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * 10000),
+      as.matrix(GTestimate::GTestimate(test_delayed, size.factor = 10000, log1p.transform = F, rescale = T))
+    )
+  })
+  
+  test_that("GTestimate.DelayedMatrix size.factor = 10000 log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000),
+      as.matrix(GTestimate::GTestimate(test_delayed, size.factor = 10000, log1p.transform = T, rescale = T))
+    )
+  })
+  
+  test_that("GTestimate.DelayedMatrix size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      as.matrix(GTestimate::GTestimate(test_delayed, size.factor = test_sf, log1p.transform = T, rescale = T))
+    )
+  })
+}
+
+{
+  test_that("GTestimate.Seurat size.factor = 1 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      as.matrix(GetAssayData(GTestimate::GTestimate(pbmc_small, size.factor = 1, log1p.transform = F, rescale = T), slot = 'data', assay = 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.Seurat size.factor = 10000 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      (t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000),
+      as.matrix(GetAssayData(GTestimate::GTestimate(pbmc_small, size.factor = 10000, log1p.transform = F, rescale = T), slot = 'data', assay = 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.Seurat size.factor = 10000 log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000),
+      as.matrix(GetAssayData(GTestimate::GTestimate(pbmc_small, size.factor = 10000, log1p.transform = T, rescale = T), slot = 'data', assay = 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.Seurat size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      as.matrix(GetAssayData(GTestimate::GTestimate(pbmc_small, size.factor = test_sf, log1p.transform = T, rescale = T), slot = 'data', assay = 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.Seurat size.factor = 1 log1p.transform = FALSE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)),
+      GTestimate::GTestimate(pbmc_small, size.factor = 1, log1p.transform = F, rescale = T)$missing_mass
+    )
+  })
+  
+  test_that("GTestimate.Seurat size.factor = 10000 log1p.transform = TRUE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)),
+      GTestimate::GTestimate(pbmc_small, size.factor = 10000, log1p.transform = T, rescale = T)$missing_mass
+    )
+  })
+  
+  test_that("GTestimate.Seurat size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)),
+      GTestimate::GTestimate(pbmc_small, size.factor = test_sf, log1p.transform = T, rescale = T)$missing_mass
+    )
+  })
+  
+  test_that("GTestimate.Seurat dense size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)),
+      GTestimate::GTestimate(test_seurat_dense, size.factor = test_sf, log1p.transform = T, rescale = T)$missing_mass
+    )
+  })
+}
+{
+  test_that("GTestimate.SingleCellExperiment size.factor = 1 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      as.matrix(GTestimate::GTestimate(test_sce, size.factor = 1, log1p.transform = F, rescale = T)@assays@data$GTestimate)
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment size.factor = 10000 log1p.transform = FALSE rescale = TRUE", {
+    testthat::expect_equal(
+      t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000 ,
+      as.matrix(assay(GTestimate::GTestimate(test_sce, size.factor = 10000, log1p.transform = F, rescale = T), 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment size.factor = 10000 log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p((t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))) * 10000)),
+      as.matrix(assay(GTestimate::GTestimate(test_sce, size.factor = 10000, log1p.transform = T, rescale = T), 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      as.matrix(assay(GTestimate::GTestimate(test_sce, size.factor = test_sf, log1p.transform = T, rescale = T), 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment delayed size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE", {
+    testthat::expect_equal(
+      log1p(t(t(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))/colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0)) * colSums(test_matrix)/test_sf)),
+      as.matrix(assay(GTestimate::GTestimate(test_sce_delayed, size.factor = test_sf, log1p.transform = T, rescale = T), 'GTestimate'))
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment size.factor = 1 log1p.transform = FALSE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      as.numeric(1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      GTestimate::GTestimate(test_sce, size.factor = 1, log1p.transform = F, rescale = T)$missing_mass
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment size.factor = 10000 log1p.transform = TRUE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      as.numeric(1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      GTestimate::GTestimate(test_sce, size.factor = 10000, log1p.transform = T, rescale = T)$missing_mass
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      as.numeric(1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      GTestimate::GTestimate(test_sce, size.factor = test_sf, log1p.transform = T, rescale = T)$missing_mass
+    )
+  })
+  
+  test_that("GTestimate.SingleCellExperiment delayed size.factor = computePooledFactors() log1p.transform = TRUE rescale = TRUE missing mass calculation", {
+    testthat::expect_equal(
+      as.numeric(1 - colSums(edgeR::goodTuringProportions(test_matrix) %>% replace(test_matrix==0,0))),
+      GTestimate::GTestimate(test_sce_delayed, size.factor = test_sf, log1p.transform = T, rescale = T)$missing_mass
     )
   })
 }

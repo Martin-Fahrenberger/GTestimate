@@ -14,18 +14,30 @@ GTestimate(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
+  rescale = FALSE,
   block.size,
   assay
 )
 
-\method{GTestimate}{matrix}(object, size.factor = 10000, log1p.transform = TRUE)
+\method{GTestimate}{matrix}(
+  object,
+  size.factor = 10000,
+  log1p.transform = TRUE,
+  rescale = FALSE
+)
 
-\method{GTestimate}{dgCMatrix}(object, size.factor = 10000, log1p.transform = TRUE)
+\method{GTestimate}{dgCMatrix}(
+  object,
+  size.factor = 10000,
+  log1p.transform = TRUE,
+  rescale = FALSE
+)
 
 \method{GTestimate}{DelayedMatrix}(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
+  rescale = FALSE,
   block.size = 1000L
 )
 
@@ -33,6 +45,7 @@ GTestimate(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
+  rescale = FALSE,
   assay = "RNA",
   ...
 )
@@ -41,6 +54,7 @@ GTestimate(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
+  rescale,
   assay = "counts",
   ...
 )
@@ -48,9 +62,11 @@ GTestimate(
 \arguments{
 \item{object}{An object containing a scRNA-seq count-matrix in a gene x counts format.}
 
-\item{size.factor}{Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize. If a vector of size factors is provided, Good-Turing results are rescaled to add up to 1, to prevent double scaling of cells.}
+\item{size.factor}{Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize.}
 
 \item{log1p.transform}{If TRUE, the GT-estimates are log1p transformed, defaults to TRUE to behave similar to Seurat's LogNormalize}
+
+\item{rescale}{If TRUE Good-Turing results will be rescaled to add up to 1, before size factors are applied.}
 
 \item{block.size}{For DelayedArray ojects defines the number of cells read into memory at the same time, this defaults to 1000. Smaller block.sizes require less RAM, but will significantly increase runtime.
 A minimum of 100 is enforced to protect the user.}
