@@ -1,6 +1,6 @@
 Package: GTestimate
 Title: Estimating scRNA-seq gene expression using the Good-Turing estimator
-Version: 0.5
+Version: 0.6
 Authors@R: 
     person("Martin", "Fahrenberger", , "martin.fahrenberger@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0000-0003-1107-0197"))
