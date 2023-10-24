@@ -54,7 +54,7 @@ GTestimate(
   object,
   size.factor = 10000,
   log1p.transform = TRUE,
-  rescale,
+  rescale = FALSE,
   assay = "counts",
   ...
 )

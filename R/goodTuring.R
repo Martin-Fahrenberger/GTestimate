@@ -11,6 +11,9 @@
 goodTuring <- function(r, n, conf=1.96)
 {
   not_zero <- n != 0
+  
+  if(length(r[not_zero]) < 2) rlang::abort(message = 'Each count vector must contain at least two different (non-zero) count levels to compute Good-Turing estimates')
+  
 	out <- .Call('simple_good_turing', PACKAGE = 'GTestimate', r[not_zero], n[not_zero], conf)
 	names(out) <- r[not_zero]
 	out
