@@ -1,10 +1,10 @@
 Package: GTestimate
-Title: Estimating scRNA-seq gene expression using the Good-Turing estimator
-Version: 0.7
+Title: Normalizing scRNA-seq data using using the Good-Turing estimator.
+Version: 1.0
 Authors@R: 
     person("Martin", "Fahrenberger", , "martin.fahrenberger@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "https://orcid.org/0000-0003-1107-0197"))
-Description: GTestimate provides easy to use Good Turing estimation for the per cell gene expression values from scRNA-seq experiment. By using the Good Tuing estimator it accounts for the probability that the next hypothetical sequencing read would be of a previously unobserved gene.
+Description: GTestimate is a scRNA-seq normalization method. In contrast to other methods it uses the Simple Good-Turing estimator for the per cell gene expression estimation. Thereby GTestimate can account for the unobserved genes and avoid overestimation of the observed genes. At default settings it serves as a drop-in replacement for Seurat's NormalizeData().
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

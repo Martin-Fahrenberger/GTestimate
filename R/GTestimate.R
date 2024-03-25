@@ -1,26 +1,26 @@
 #' GTestimate
 #'
-#' @description Implements the simple Good-Turing estimation for scRNA-seq relative gene expression estimation.
+#' @description Normalization of scRNA-seq data using the Simple Good-Turing estimator for relative gene expression estimation.
 #' @param object An object containing a scRNA-seq count-matrix in a gene x counts format.
-#' @param size.factor Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's RC and LogNormalize.
+#' @param size.factor Either a numeric vector with one entry per cell, which gives the size factors for cell-level normalization (size factors can be calculated with e.g. scuttle::pooledSizeFactors()) or a number giving the library-size all cells should be scaled to. This defaults to 10,000 in order to behave similar to Seurat's NormalizeData().
 #' @param rescale  If TRUE Good-Turing results will be rescaled to add up to 1, before size factors are applied. 
-#' @param log1p.transform If TRUE, the GT-estimates are log1p transformed, defaults to TRUE to behave similar to Seurat's LogNormalize
+#' @param log1p.transform If TRUE, the GT-estimates are log1p transformed, defaults to TRUE to behave similar to Seurat's NormalizeData()
 #' @param assay For Seurat objects: set the assay from which to extract the count matrix, defaults to 'RNA' as this is typically were scRNA-seq count data is stored.
 #'
 #' For SingleCellExperiment objects: set the assay from which to extract the count matrix, defaults to 'counts' as this is typically were scRNA-seq count data is stored.
 #' @param block.size For DelayedArray ojects defines the number of cells read into memory at the same time, this defaults to 1000. Smaller block.sizes require less RAM, but will significantly increase runtime.
 #' A minimum of 100 is enforced to protect the user.
 #' @details GTestimate is the main function of the GTestimate package.
-#' It provides methods to calculate the Good-Turing frequency estimates for common scRNA-seq count matrix formats.
+#' It provides methods for scRNA-seq normalization based on the Good-Turing frequency estimates.
 #' GTestimate currently provides methods for regular matrices, sparse dgCMatrix matrices, delayedMatrix matrices, Seurat objects and SingleCellExperiment objects.
 #'
-#' For matrix input a matrix (either sparse, delayed or dense depending on input) will be returned, containing the Good-Turing estimates for the given count-matrix.
+#' For matrix input a matrix (either sparse, delayed or dense depending on input) will be returned, containing the normalized gene expression values of the given count-matrix.
 #'
-#' For Seurat objects a new GTestimate assay will be created within the object (and set as the DefaultAssay). This assay copies the previous counts-data into it's counts slot, and adds the GTestimates in the data slot, additionally the missing_mass will be calculated and added as meta-data.
+#' For Seurat objects a new GTestimate assay will be created within the object (and set as the DefaultAssay). This assay copies the previous counts-data into it's counts slot, and adds the normalized gene expression in the data slot, additionally the missing_mass will be calculated and added as meta-data.
 #'
-#' For SingleCellExperiment objects a new assay (called GTestimate) will be created within the object, additionally the missing_mass will be calculated and added as colData.
+#' For SingleCellExperiment objects a new assay (called GTestimate) containing the normalized gene expression values will be created within the object, additionally the missing_mass will be calculated and added as colData.
 #'
-#' @return Returns object with Good-Turing gene expression estimates. For Seurat and SingleCellExperiment objects also adds a Metadata vector missing_mass which gives the estimated portion of mRNA's in the cell belonging to unobserved genes (refered to as P0 in Gale and Sampson 1995)
+#' @return Returns object with normalized gene expression estimates. For Seurat and SingleCellExperiment objects, also adds a Metadata vector missing_mass containing cell-wise estimates of the probability that a next hypothetical unique read would be of a currently unobserved gene.
 #' @rdname GTestimate
 #' @export
 #' @examples
@@ -251,6 +251,10 @@ GTestimate.SingleCellExperiment <- function(object, size.factor = 10000, log1p.t
   if (any(dim(assay_data)==c(0,0))){
     rlang::abort(message = 'The chosen assay has no data')
   }
+  if (!is.null(sizeFactors(object))) {
+    rlang::warn(message = 'The size factors in slot "sizeFactor" of your SingleCellExperiment object were ignored. If you want to use them please set size.factor explicitly e.g. "GTestimate(object, size.factor = sizeFactors(object))". This is done to ensure similar behaviour for Seurat and SingleCellExperiment objects.')
+  }
+  
   GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, rescale, ...)
   SummarizedExperiment::assay(object, 'GTestimate') <- GT_estimates$gt_estimates
   SummarizedExperiment::colData(object) <- cbind(SummarizedExperiment::colData(object), missing_mass = GT_estimates$missing_mass)

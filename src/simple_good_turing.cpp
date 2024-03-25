@@ -1,14 +1,14 @@
 #include "utils.h"
 #include "Rcpp.h"
 
-//' Implements the simple version of the Good-Turing frequency estimator in C++.
+//' Implements the Simple Good-Turing frequency estimator in C++.
 //' This is based on the C code written by Geoffrey Sampson from Sussex University.
-//' The C Code was the translated to C++ as part of the edgeR package py Aaron Lun.
+//' The C Code was then translated to C++ as part of the edgeR R-package by Aaron Lun.
 //' This version has only been modified slighlty, for simplicity and compatibility
 //' with roxygen2, all core components are identical to the edgeR version licensed under GPL>=2.
 //'
-//' The function takes in a vector of observed frequencies and another vector of the same
-//' length of frequencies (of observed frequencies). The first vector must be
+//' The function takes a vector of observed frequencies and another vector of the same
+//' length of the frequencies of observed frequencies. The first vector must be
 //' sorted in ascending order. It also takes a numeric scalar which describes
 //' the confidence factor.
 //'

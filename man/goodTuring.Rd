@@ -19,5 +19,4 @@ Good-Turing frequency estimates for the frequencies given in r
 \description{
 Wrapper function for the Simple Good-Turing algorithm for frequency estimation
 as described by Gale and Sampson (1995).
-The called C++ Code is identical to the implementation by Aaron Lun for the edgeR R package
 }
