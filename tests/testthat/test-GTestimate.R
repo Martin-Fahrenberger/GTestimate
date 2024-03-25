@@ -4,6 +4,7 @@ library(DelayedArray)
 library(HDF5Array)
 data('pbmc_small')
 
+# using slot = 'counts' here results in warnings when running the tests, but ensures compatibility with Seurat versions <5.0.0
 test_dgCMatrix <- GetAssayData(pbmc_small, slot = 'counts')
 test_matrix <- as.matrix(test_dgCMatrix)
 test_sf <- scuttle::computePooledFactors(as.SingleCellExperiment(pbmc_small))$sizeFactor

@@ -228,14 +228,24 @@ GTestimate.DelayedMatrix <- function(object, size.factor = 10000, log1p.transfor
 #' @export
 GTestimate.Seurat <- function(object, size.factor = 10000, log1p.transform = TRUE, rescale = FALSE, assay = 'RNA', ...){
   # Definition of the GTestimate method for Seurat objects, extracts count data from the appropriate slot and writes Good-Turing estimates to new assay.
-  assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
+  if(utils::packageVersion('SeuratObject') >= '5.0.0') { # Workaround because Seurat changed slot to layer...
+    assay_data <- SeuratObject::GetAssayData(object, layer = 'counts', assay = assay)
+  } else {
+    assay_data <- SeuratObject::GetAssayData(object, slot = 'counts', assay = assay)
+  }
+
   if (any(dim(assay_data)==c(0,0))){
     rlang::abort(message = 'The chosen assay has no data in the counts slot')
   }
   GT_estimates <- GTestimate(assay_data, size.factor, log1p.transform, rescale, ...)
 
   object[['GTestimate']] <- SeuratObject::CreateAssayObject(data = GT_estimates$gt_estimates)
-  object@assays$GTestimate@counts <- GetAssayData(object, assay = assay, slot = 'counts')
+  if(utils::packageVersion('SeuratObject') >= '5.0.0') { # Workaround because Seurat changed slot to layer...
+    object <- SetAssayData(object, new.data = GetAssayData(object, assay = assay, layer = 'counts'), assay = 'GTestimate', layer = 'counts')
+  } else {
+    object <- SetAssayData(object, new.data = GetAssayData(object, assay = assay, slot = 'counts'), assay = 'GTestimate', slot = 'counts')
+  }
+
   DefaultAssay(object) <- 'GTestimate'
   object <- SeuratObject::AddMetaData(object, metadata = GT_estimates$missing_mass, col.name = 'missing_mass')
   object <- SeuratObject::LogSeuratCommand(object = object)

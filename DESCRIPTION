@@ -12,7 +12,8 @@ RoxygenNote: 7.2.3
 Imports: 
     Rcpp,
     sparseMatrixStats,
-    rlang
+    rlang,
+    utils
 LinkingTo:
     Rcpp
 URL: https://github.com/Martin-Fahrenberger/GTestimate
