@@ -3,7 +3,7 @@
 
 <!-- badges: start -->
 <!-- badges: end -->
-GTestimate is a scRNA-seq normalization method. In contrast to other methods it uses the Simple Good-Turing estimator for the per cell gene expression estimation. 
+GTestimate is a scRNA-seq normalization method. In contrast to other methods it uses the Simple Good-Turing estimator for the per cell relative gene expression estimation. 
 Thereby GTestimate can account for the unobserved genes and avoid overestimation of the observed genes. At default settings it serves as a drop-in replacement for Seurat's NormalizeData().
 
 ## Installation
