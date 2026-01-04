@@ -8,7 +8,7 @@ Thereby GTestimate can account for the unobserved genes and avoid overestimation
 
 ## Preprint
 
-The accompanying preprint is now available on bioRxiv https://doi.org/10.1101/2024.07.02.601501
+The accompanying paper is now published in GigaScience: https://doi.org/10.1093/gigascience/giaf084
 
 The code for this manuscript is available at https://github.com/Martin-Fahrenberger/GTestimate-Paper.
 This includes usage examples for multiple data-sets of different types.
